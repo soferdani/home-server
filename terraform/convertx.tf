@@ -103,3 +103,37 @@ resource "kubernetes_service" "convertx" {
     type = "NodePort"
   }
 }
+
+
+resource "kubernetes_ingress_v1" "convertx" {
+  metadata {
+    name      = "convertx"
+    namespace = kubernetes_namespace.home.metadata[0].name
+    annotations = {
+      # Disable HTTPS redirect for local testing
+      "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
+    }
+  }
+
+  spec {
+    rule {
+      host = "convertx.home.local"
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.convertx.metadata[0].name
+              port {
+                number = 3000          # cluster-internal port
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
