@@ -108,3 +108,33 @@ resource "kubernetes_service" "dashy" {
   }
 }
 
+resource "kubernetes_ingress_v1" "dashy" {
+  metadata {
+    name      = "dashy"
+    namespace = kubernetes_namespace.home.metadata[0].name
+    annotations = {
+      # keep HTTPS off in Minikube for now
+      "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
+    }
+  }
+
+  spec {
+    rule {
+      host = "dashy.home.local"
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.dashy.metadata[0].name   # points to the Service you already have
+              port { number = 8080 }                             # cluster-internal port
+            }
+          }
+        }
+      }
+    }
+  }
+}
